@@ -7,7 +7,7 @@ with open('README.rst') as f:
 
 setup(
     name='reversible',
-    version='0.1.0',
+    version='0.1.1.dev0',
     description=(
         'reversible lets you treat multiple reversible actions as a single '
         'transaction. If any of them fail, those that have been executed '
