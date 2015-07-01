@@ -3,7 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. include:: ../README.rst
+``reversible``
+==============
+
+``reversible`` provides a simple abstraction for actions that can be
+reversed or rolled back and provides methods to construct, chain, and consume
+them in a readable way.
 
 Contents
 --------
@@ -11,6 +16,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   overview
    api
 
 Indices and tables

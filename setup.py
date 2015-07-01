@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 with open('README.rst') as f:
-    long_description = f.read().replace(':py:func:', '')
+    long_description = f.read()
 
 setup(
     name='reversible',

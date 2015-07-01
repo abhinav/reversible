@@ -14,6 +14,9 @@ lint:
 docs:
 	make -C docs html
 
+docszip: docs
+	cd docs/_build/html; zip -r ../html.zip .
+
 docsopen: docs
 	open docs/_build/html/index.html
 
