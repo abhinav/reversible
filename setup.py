@@ -3,15 +3,14 @@
 from setuptools import setup, find_packages
 
 with open('README.rst') as f:
-    long_description = f.read()
+    long_description = f.read().replace(':py:func:', '')
 
 setup(
     name='reversible',
     version='0.1.1.dev0',
     description=(
-        'reversible lets you treat multiple reversible actions as a single '
-        'transaction. If any of them fail, those that have been executed '
-        'will be reverted.'
+        'A Python library to represent, construct, chain, and execute '
+        'reversible actions.'
     ),
     long_description=long_description,
     author='Abhinav Gupta',
