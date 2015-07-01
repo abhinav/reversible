@@ -18,6 +18,7 @@ Contents
 
    overview
    api
+   changelog
 
 Indices and tables
 ------------------

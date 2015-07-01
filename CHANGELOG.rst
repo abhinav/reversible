@@ -1,5 +1,5 @@
-Changelog for reversible
-========================
+Releases
+========
 
 0.1.1 (unreleased)
 ------------------
