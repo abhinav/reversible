@@ -6,6 +6,6 @@ reversed or rolled back and provides methods to construct, chain, and consume
 them in a readable way.
 
 Documentation
-    http://pythonhosted.org/reversible/
+    http://reversible.readthedocs.org/en/latest/
 PyPI
     https://pypi.python.org/pypi/reversible
