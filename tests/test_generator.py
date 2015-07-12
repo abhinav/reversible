@@ -70,6 +70,15 @@ def test_none_action_is_yieldable_with_failure(get_none_action):
     before_action.backwards.assert_called_once_with()
 
 
+def test_not_a_generator():
+
+    @reversible.gen
+    def a():
+        return 42
+
+    assert 42 == reversible.execute(a())
+
+
 def test_raise_return_on_empty():
     assert 42 == reversible.execute(raises_return_immediately(42))
 

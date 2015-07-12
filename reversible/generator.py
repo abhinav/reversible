@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import sys
+import types
 import functools
 from collections import deque
 
@@ -132,7 +133,7 @@ def gen(function):
     @functools.wraps(function)  # TODO: use wrapt instead?
     def new_function(*args, **kwargs):
         try:
-            generator = function(*args, **kwargs)
+            value = function(*args, **kwargs)
         except Return as result:
             return SimpleAction(
                 lambda ctx: ctx.value,
@@ -140,11 +141,11 @@ def gen(function):
                 result,
             )
         else:
-            if generator is not None:
-                return _GeneratorAction(generator)
+            if isinstance(value, types.GeneratorType):
+                return _GeneratorAction(value)
             else:
                 return SimpleAction(
-                    lambda _: None,
+                    lambda _: value,
                     lambda _: None,
                     None,
                 )

@@ -16,7 +16,7 @@ setup(
     author='Abhinav Gupta',
     author_email='mail@abhinavg.net',
     url='https://github.com/abhinav/reversible',
-    packages=find_packages(exclude=('tests*',)),
+    packages=find_packages(exclude=('tests', 'test.*')),
     license='MIT',
     tests_require=['pytest', 'mock'],
     classifiers=[
