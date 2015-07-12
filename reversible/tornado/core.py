@@ -7,10 +7,8 @@ import greenlet
 from tornado.ioloop import IOLoop
 from tornado.concurrent import Future, is_future
 
-from reversible import core
-
-
-action = core.action
+from reversible.core import action
+from reversible.core import execute as _execute
 
 
 def _maybe_async(fn):
@@ -102,7 +100,7 @@ def execute(action, io_loop=None):
 
     def call():
         try:
-            result = core.execute(_TornadoAction(action, io_loop))
+            result = _execute(_TornadoAction(action, io_loop))
         except Exception:
             output.set_exc_info(sys.exc_info())
         else:
