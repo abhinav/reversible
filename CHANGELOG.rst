@@ -1,10 +1,12 @@
 Releases
 ========
 
-0.1.2 (unreleased)
+0.2.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add support for Tornado-based actions. With the drop-in module
+  ``reversible.tornado``, the ``forwards`` and ``backwards`` methods can now be
+  asynchronous.
 
 
 0.1.1 (2015-07-11)
