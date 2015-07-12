@@ -17,17 +17,17 @@ def _maybe_async(fn):
 
     @functools.wraps(fn)
     def new_fn(self, *args, **kwargs):
-        current = greenlet.getcurrent()
-        assert current.parent is not None, (
-            "TornadoAction can only be used from inside a child greenlet."
-        )
-
         result = fn(self, *args, **kwargs)
         if not is_future(result):
             # If the function doesn't return a future, its exeption or result
             # is available to the caller right away. No need to switch control
             # with greenlets.
             return result
+
+        current = greenlet.getcurrent()
+        assert current.parent is not None, (
+            "TornadoAction can only be used from inside a child greenlet."
+        )
 
         def callback(future):
             if future.exception():
@@ -43,7 +43,14 @@ def _maybe_async(fn):
 
         # Otherwise, switch to parent and schedule to switch back when the
         # result is available.
-        result.add_done_callback(callback)
+
+        # A note about add_done_callback: It executes the callback right away
+        # if the future has already finished executing. That's a problem
+        # because we don't want the greenlet switch back to current to happen
+        # until we've switched to parent first. So, io_loop.add_callback is
+        # used to schedule the future callback. This ensures that we switch to
+        # parent first.
+        self.io_loop.add_callback(result.add_done_callback, callback)
         return current.parent.switch()
 
     return new_fn
