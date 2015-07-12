@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.1.1 (unreleased)
+0.1.1 (2015-07-11)
 ------------------
 
 - Fix bug where ``reversible.gen`` couldn't handle functions that were not
