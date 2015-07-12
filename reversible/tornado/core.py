@@ -29,15 +29,9 @@ def _maybe_async(fn):
 
         def callback(future):
             if future.exception():
-                self.io_loop.add_callback(
-                    current.throw,
-                    future.exc_info(),
-                )
+                self.io_loop.add_callback(current.throw, *future.exc_info())
             else:
-                self.io_loop.add_callback(
-                    current.switch,
-                    future.result()
-                )
+                self.io_loop.add_callback(current.switch, future.result())
 
         # Otherwise, switch to parent and schedule to switch back when the
         # result is available.
