@@ -1,6 +1,9 @@
 Overview
 ========
 
+Basics
+------
+
 The primary concept in ``reversible`` is an action. An action is any object
 that has a ``forwards()`` and a ``backwards()`` method (each taking no
 arguments besides the implicit ``self`` argument). The ``forwards`` method
@@ -115,3 +118,12 @@ For example,
                     comment.body, 'Posted:', format_time(comment.time)
                 ),
             )
+
+Tornado Support
+---------------
+
+``reversible`` also supports use of `Tornado
+<http://www.tornadoweb.org/en/stable/>`_-based asynchronous operations within
+actions with the :py:mod:`reversible.tornado` module.
+
+TODO more documentation

@@ -82,13 +82,18 @@ class _TornadoAction(object):
 def execute(action, io_loop=None):
     """Execute the given action and return a Future with the result.
 
-    The ``forwards`` and ``backwards`` methods for the action may be
+    The ``forwards`` and/or ``backwards`` methods for the action may be
     synchronous or asynchronous. If asynchronous, the method must return a
     Future that will resolve to its result.
 
     See :py:func:`reversible.execute` for more details on the behavior of
     ``execute``.
 
+    :param action:
+        The action to execute.
+    :param io_loop:
+        IOLoop through which asynchronous operations will be executed. If
+        omitted, the current IOLoop is used.
     :returns:
         A future containing the result of executing the action.
     """
