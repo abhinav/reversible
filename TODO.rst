@@ -1,1 +1,2 @@
 - Tornado support
+- Make it possible to convert arbitrary context managers into actions.
