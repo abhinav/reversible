@@ -174,7 +174,6 @@ def make_future(request):
                 future.set_exception(exc)
             return future
 
-
     return mk
 
 
@@ -215,7 +214,7 @@ def test_generator_execute_failure(failing_action):
 
     @reversible.gen
     def action():
-        result = yield failing_action()
+        yield failing_action()
         pytest.fail('Should not reach here')
 
     with pytest.raises(MyException) as exc_info:
@@ -230,7 +229,7 @@ def test_generator_execute_failure_catch(failing_action):
     @reversible.gen
     def action():
         try:
-            result = yield failing_action()
+            yield failing_action()
         except MyException:
             raise tornado.gen.Return(100)
 

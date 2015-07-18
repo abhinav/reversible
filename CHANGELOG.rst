@@ -6,7 +6,7 @@ Releases
 
 - Add support for Tornado-based actions. With usage of the module
   :py:mod:`reversible.tornado`, the ``forwards`` and ``backwards`` methods can
-  now be asynchronous.
+  now be asynchronous. See :ref:`tornado-support-overview` for details.
 
 
 0.1.1 (2015-07-11)
