@@ -11,6 +11,10 @@ class MyException(Exception):
     pass
 
 
+class RollbackFailException(Exception):
+    pass
+
+
 @pytest.fixture(params=['sync', 'async'])
 def returns_42(request):
     if 'sync' == request.param:
@@ -94,6 +98,29 @@ def failing_action(raises_exception, does_nothing, request):
 
 
 @pytest.fixture(params=['class', 'decorator'])
+def successful_with_rollback_fail_action(does_nothing, request):
+    if request.param == 'class':
+        class Action(object):
+            def forwards(self):
+                return does_nothing()
+
+            def backwards(self):
+                raise RollbackFailException('rollback failed')
+
+        return Action
+    else:
+        @reversible.action
+        def go(ctx):
+            return does_nothing()
+
+        @go.backwards
+        def rollback(ctx):
+            raise RollbackFailException('rollback failed')
+
+        return go
+
+
+@pytest.fixture(params=['class', 'decorator'])
 def rollback_failed_action(raises_exception, request):
     if request.param == 'class':
         class Action(object):
@@ -101,7 +128,7 @@ def rollback_failed_action(raises_exception, request):
                 return raises_exception()
 
             def backwards(self):
-                raise Exception('rollback failed')
+                raise RollbackFailException('rollback failed')
 
         return Action
     else:
@@ -111,9 +138,44 @@ def rollback_failed_action(raises_exception, request):
 
         @go.backwards
         def rollback(ctx):
-            raise Exception('rollback failed')
+            raise RollbackFailException('rollback failed')
 
         return go
+
+
+@pytest.fixture(params=['delay', 'instant_coroutine', 'maybe_future'])
+def make_future(request):
+    if request.param == 'delay':
+
+        @tornado.gen.coroutine
+        def mk(v=None, exc=None):
+            yield tornado.gen.sleep(0.01)
+            if exc is None:
+                raise tornado.gen.Return(v)
+            else:
+                raise exc
+
+    elif request.param == 'instant_coroutine':
+
+        @tornado.gen.coroutine
+        def mk(v=None, exc=None):
+            if exc is None:
+                return v
+            else:
+                raise exc
+
+    else:
+
+        def mk(v=None, exc=None):
+            future = tornado.gen.Future()
+            if exc is None:
+                future.set_result(v)
+            else:
+                future.set_exception(exc)
+            return future
+
+
+    return mk
 
 
 @pytest.mark.gen_test
@@ -131,18 +193,110 @@ def test_failing_action(failing_action):
 
 @pytest.mark.gen_test
 def test_rollback_fail(rollback_failed_action):
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(RollbackFailException) as exc_info:
         yield reversible.execute(rollback_failed_action())
     assert 'rollback failed' in str(exc_info)
 
 
 @pytest.mark.gen_test
-def test_generator_execute(successful_action):
+def test_generator_execute_success(successful_action):
 
     @reversible.gen
     def action():
         result = yield successful_action()
         raise reversible.Return(result)
 
-    value = yield reversible.execute(successful_action())
+    value = yield reversible.execute(action())
     assert 42 == value
+
+
+@pytest.mark.gen_test
+def test_generator_execute_failure(failing_action):
+
+    @reversible.gen
+    def action():
+        result = yield failing_action()
+        pytest.fail('Should not reach here')
+
+    with pytest.raises(MyException) as exc_info:
+        yield reversible.execute(action())
+
+    assert 'great sadness' in str(exc_info)
+
+
+@pytest.mark.gen_test
+def test_generator_execute_failure_catch(failing_action):
+
+    @reversible.gen
+    def action():
+        try:
+            result = yield failing_action()
+        except MyException:
+            raise tornado.gen.Return(100)
+
+    result = yield reversible.execute(action())
+    assert 100 == result
+
+
+@pytest.mark.gen_test
+def test_generator_rollback_fail(
+    successful_with_rollback_fail_action,
+    failing_action
+):
+
+    @reversible.gen
+    def action():
+        yield successful_with_rollback_fail_action()
+        yield failing_action()
+        pytest.fail('Should not reach here')
+
+    with pytest.raises(RollbackFailException) as exc_info:
+        yield reversible.execute(action())
+
+    assert 'rollback failed' in str(exc_info)
+
+
+@pytest.mark.gen_test
+def test_generator_lift(make_future, successful_action):
+
+    @reversible.gen
+    def action():
+        yield successful_action()
+        value = yield reversible.lift(make_future(42))
+
+        raise reversible.Return(value)
+
+    value = yield reversible.execute(action())
+    assert 42 == value
+
+
+@pytest.mark.gen_test
+def test_generator_lift_with_failing_future(make_future, successful_action):
+
+    @reversible.gen
+    def action():
+        yield successful_action()
+        yield reversible.lift(
+            make_future(exc=MyException('future failed'))
+        )
+
+    with pytest.raises(MyException) as exc_info:
+        yield reversible.execute(action())
+
+    assert 'future failed' in str(exc_info)
+
+
+@pytest.mark.gen_test
+def test_generator_lift_with_rollback(make_future, failing_action):
+
+    @reversible.gen
+    def action():
+        value = yield reversible.lift(make_future(42))
+        assert value == 42
+
+        yield failing_action()
+
+    with pytest.raises(MyException) as exc_info:
+        yield reversible.execute(action())
+
+    assert 'great sadness' in str(exc_info)

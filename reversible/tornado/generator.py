@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import sys
 import types
 import functools
 
@@ -28,13 +29,36 @@ class _Lift(object):
         pass
 
 
+def _map_generator(f, generator):
+    """Apply ``f`` to the results of the given bi-directional generator.
+
+    Unfortunately, generator comprehension (``f(x) for x in gen``) does not
+    work for as expected for bi-directional generators. It won't send
+    exceptions and results back.
+
+    This function implements a map function for generators that sends values
+    and exceptions back and forth as expected.
+    """
+    item = next(generator)
+    while True:
+        try:
+            result = yield f(item)
+        except Exception:
+            item = generator.throw(*sys.exc_info())
+        else:
+            item = generator.send(result)
+
+
 class _TornadoGeneratorAction(object):
 
     __slots__ = ('action',)
 
     def __init__(self, generator, io_loop=None):
         self.action = _GeneratorAction(
-            _TornadoAction(action, io_loop) for action in generator
+            _map_generator(
+                functools.partial(_TornadoAction, io_loop=io_loop),
+                generator,
+            )
         )
 
     def forwards(self):
