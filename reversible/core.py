@@ -182,6 +182,11 @@ def action(forwards=None, context_class=None):
         own context object and that object will be implictly passed as the
         first argument to both, the ``forwards`` and the ``backwards``
         implementations.
+    :returns:
+        If ``forwards`` was given, a partially constructed action is returned.
+        The ``backwards`` method on that object can be used as a decorator to
+        specify the rollback method for the action. If ``forwards`` was
+        omitted, a decorator that accepts the ``forwards`` method is returned.
     """
     context_class = context_class or dict
 

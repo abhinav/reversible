@@ -3,7 +3,8 @@
 test_args := \
 	--cov reversible \
 	--cov-config .coveragerc \
-	--cov-report term-missing
+	--cov-report term-missing \
+	tests
 
 test:
 	PYTHONDONTWRITEBYTECODE=1 py.test $(test_args)

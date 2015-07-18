@@ -70,6 +70,25 @@ def test_none_action_is_yieldable_with_failure(get_none_action):
     before_action.backwards.assert_called_once_with()
 
 
+def test_action_failure_catch():
+    before_action = mock.Mock()
+
+    after_action = mock.Mock()
+    after_action.forwards.side_effect = Exception('great sadness')
+
+    @reversible.gen
+    def action():
+        yield before_action
+        try:
+            yield after_action
+        except Exception:
+            raise reversible.Return(42)
+
+    assert 42 == reversible.execute(action())
+
+    before_action.forwards.assert_called_once_with()
+
+
 def test_not_a_generator():
 
     @reversible.gen

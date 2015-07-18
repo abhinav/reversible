@@ -19,6 +19,9 @@ setup(
     packages=find_packages(exclude=('tests', 'test.*')),
     license='MIT',
     tests_require=['pytest', 'mock'],
+    extras_require={
+        'tornado': ['tornado', 'greenlet'],
+    },
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
