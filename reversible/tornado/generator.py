@@ -14,6 +14,8 @@ from .core import _TornadoAction
 
 _RETURNS = (Return, _Return)
 
+Return = Return
+
 
 class _Lift(object):
 
@@ -97,15 +99,23 @@ def gen(function, io_loop=None):
 
         @reversible.tornado.gen
         def post_comment(post, comment, client):
-            comment_id = yield save_comment(comment)
-            yield update_comment_count(post)
+            try:
+                comment_id = yield save_comment(comment)
+            except CommentStoreException:
+                # Exceptions thrown by actions may be caught by the
+                # action.
+                yield queue_save_comment_request(comment)
+            else:
+                yield update_comment_count(post)
+                update_cache()
 
     :param function:
         The generator function. This generator must yield action objects. The
         ``forwards`` and/or ``backwards`` methods on the action may be
         asynchronous operations returning coroutines.
     :param io_loop:
-        IOLoop used to execute asynchronous operations.
+        IOLoop used to execute asynchronous operations. Defaults to the
+        current IOLoop if omitted.
     :returns:
         An action executable via :py:func:`reversible.tornado.execute` and
         yieldable in other instances of :py:func:`reversible.tornado.gen`.
@@ -135,30 +145,37 @@ def gen(function, io_loop=None):
 
 
 def lift(future):
-    """Returns the result of a Tornado Future inside ``gen``.
+    """Returns the result of a Tornado Future inside a generator-based action.
 
     Inside a :py:func:`reversible.tornado.gen` context, the meaning of
-    ``yield`` changes to "execute this action and return the result."
-    However sometimes it is necessary to execute a standard Tornado coroutine.
-    To make this possible, the ``lift`` method is made available.
+    ``yield`` changes to "execute this possibly asynchronous action and return
+    the result." However sometimes it is necessary to execute a standard
+    Tornado coroutine. To make this possible, the ``lift`` method is made
+    available.
 
     .. code-block:: python
 
         @reversible.tornado.gen
         def my_action():
             request = yield build_request_action()
-            response = yield reversible.tornado.lift(
-                AsyncHTTPClient().fetch(request)
-            )
+            try:
+                response = yield reversible.tornado.lift(
+                    AsyncHTTPClient().fetch(request)
+                )
+            except HTTPError:
+                # ...
 
             raise reversible.tornado.Return(response)
 
-    Note that actions executed through lift are assumed to be non-reversible.
+    Note that operations executed through lift are assumed to be
+    non-reversible. If the operations are intended to be reversible, a
+    reversible action must be constructed.
 
     :param future:
         Tornado future whose result is required. When the returned object is
-        yielded, action execution will block until the future's result is
-        available or the future fails.
+        yielded, action execution will stop until the future's result is
+        available or the future fails. If the future fails, its exception will
+        be propagated back at the yield point.
     :returns:
         An action yieldable inside a :py:func:`reversible.tornado.gen`
         context.
