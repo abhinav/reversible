@@ -1,4 +1,4 @@
-include *.md
+include *.rst
 include LICENSE
 include tox.ini
 recursive-include reversible *.py
