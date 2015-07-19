@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.2.0 (unreleased)
+0.2.0 (2015-07-18)
 ------------------
 
 - Add support for Tornado-based actions. With usage of the module
