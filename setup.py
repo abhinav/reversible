@@ -7,7 +7,7 @@ with open('README.rst') as f:
 
 setup(
     name='reversible',
-    version='0.2.0',
+    version='0.2.1.dev0',
     description=(
         'A Python library to represent, construct, chain, and execute '
         'reversible actions.'
